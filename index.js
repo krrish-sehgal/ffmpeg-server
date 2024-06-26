@@ -50,12 +50,12 @@ function handleChunk(roomName, chunkData) {
       "libx264",
       "-c:a",
       "aac",
-      "-strict",
-      "-2",
-      "-hls_time",
-      "5",
-      "-hls_list_size",
-      "3",
+      "-start_number", "0",
+      "-hls_time", "5",
+      '-segment_format', 'mpegts',
+      "-hls_flags", "append_list",
+      "-hls_list_size", "0",
+      "-force_key_frames", "expr:gte(t,n_forced*5)",
       filename,
     ];
 
@@ -73,7 +73,7 @@ function handleChunk(roomName, chunkData) {
 }
 
 // Start the Express server
-const server = app.listen(9000, () => {
+const server = app.listen(3000, () => {
   console.log("Server listening on port 9000");
 });
 
