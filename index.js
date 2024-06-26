@@ -14,14 +14,21 @@ function generateFilename(roomName) {
 }
 
 app.use("/", express.static(path.join(__dirname, "public")));
-app.use("/output", express.static(path.join(__dirname, "output")));
+// app.use("/output", express.static(path.join(__dirname, "output")));
 
 app.post("/chunk/:roomName", (req, res) => {
+  console.log("hcc");
   req.on("data", (chunk) => {
     // console.log(⁠ Chunk for ${req.params.roomName} ⁠)
     handleChunk(req.params.roomName, chunk);
   });
+
+  req.on("end", () => {
+    ffmpegProcessMap[req.params.roomName].stdin.end();
+  });
 });
+
+app.use("/output", express.static(path.join(__dirname, "output")));
 
 const ffmpegProcessMap = {};
 
@@ -38,17 +45,23 @@ function handleChunk(roomName, chunkData) {
   if (!ffmpegProcessMap[roomName]) {
     const ffmpegCommand = [
       "-i",
-      "-", // Read from standard input (stdin)
+      "-",
       "-c:v",
       "libx264",
       "-c:a",
       "aac",
-      "-strict",
-      "-2",
+      "-start_number",
+      "0",
       "-hls_time",
       "5",
+      "-segment_format",
+      "mpegts",
+      "-hls_flags",
+      "append_list",
       "-hls_list_size",
-      "3",
+      "0",
+      "-force_key_frames",
+      "expr:gte(t,n_forced*5)",
       filename,
     ];
 
@@ -61,6 +74,7 @@ function handleChunk(roomName, chunkData) {
     });
     ffmpegProcessMap[roomName] = ffmpegProcess;
   }
+
   ffmpegProcessMap[roomName].stdin.write(chunkData);
 }
 
