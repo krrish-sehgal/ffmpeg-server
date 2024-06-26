@@ -17,13 +17,13 @@ app.use("/", express.static(path.join(__dirname, "public")));
 // app.use("/output", express.static(path.join(__dirname, "output")));
 
 app.post("/chunk/:roomName", (req, res) => {
-  console.log("hcc");
   req.on("data", (chunk) => {
     // console.log(⁠ Chunk for ${req.params.roomName} ⁠)
     handleChunk(req.params.roomName, chunk);
   });
 
   req.on("end", () => {
+    console.log("Stream stopped");
     ffmpegProcessMap[req.params.roomName].stdin.end();
   });
 });
@@ -50,12 +50,18 @@ function handleChunk(roomName, chunkData) {
       "libx264",
       "-c:a",
       "aac",
-      "-start_number", "0",
-      "-hls_time", "5",
-      '-segment_format', 'mpegts',
-      "-hls_flags", "append_list",
-      "-hls_list_size", "0",
-      "-force_key_frames", "expr:gte(t,n_forced*5)",
+      "-start_number",
+      "0",
+      "-hls_time",
+      "5",
+      "-segment_format",
+      "mpegts",
+      "-hls_flags",
+      "append_list",
+      "-hls_list_size",
+      "0",
+      "-force_key_frames",
+      "expr:gte(t,n_forced*5)",
       filename,
     ];
 
@@ -73,7 +79,7 @@ function handleChunk(roomName, chunkData) {
 }
 
 // Start the Express server
-const server = app.listen(3000, () => {
+const server = app.listen(9000, () => {
   console.log("Server listening on port 9000");
 });
 
