@@ -1,66 +1,76 @@
 const express = require("express");
 const path = require("path");
+const { spawn } = require("child_process");
 const fs = require("fs");
-const ffmpeg = require("fluent-ffmpeg");
-const { Writable } = require("stream");
+
+const streamsDir = path.join(__dirname, "output");
 
 const app = express();
-const port = 3001;
-const hlsOutputPath = path.join(__dirname, "output", "roomName");
 
-// Ensure output directory exists
-if (!fs.existsSync(hlsOutputPath)) {
-  fs.mkdirSync(hlsOutputPath, { recursive: true });
+function generateFilename(roomName) {
+  const streamPath = path.join(streamsDir, `${roomName}`);
+  fs.mkdirSync(streamPath, { recursive: true });
+  return path.join(streamPath, "index.m3u8");
 }
 
-app.use(express.static("public"));
+app.use("/", express.static(path.join(__dirname, "public")));
 app.use("/output", express.static(path.join(__dirname, "output")));
 
-// Endpoint to handle incoming stream data
-app.post("/upload", (req, res) => {
-  const writableStream = new Writable({
-    write(chunk, encoding, callback) {
-      ffmpeg()
-        .input(chunk)
-        .inputFormat("webm")
-        .outputOptions([
-          "-c:v copy",
-          "-hls_time 10",
-          "-hls_list_size 0",
-          "-f hls",
-        ])
-        .output(path.join(hlsOutputPath, "index.m3u8"))
-        .on("end", () => {
-          console.log("FFmpeg processing finished");
-        })
-        .on("error", (err) => {
-          console.error("FFmpeg error:", err);
-        })
-        .run();
-      callback();
-    },
-  });
-
-  req.pipe(writableStream);
-  req.on("end", () => {
-    res.status(200).send("Stream data received");
+app.post("/chunk/:roomName", (req, res) => {
+  req.on("data", (chunk) => {
+    // console.log(⁠ Chunk for ${req.params.roomName} ⁠)
+    handleChunk(req.params.roomName, chunk);
   });
 });
 
-// Endpoint to get HLS playlist and segments
-app.get("/hls/:roomName/:fileName", (req, res) => {
-  const roomName = req.params.roomName;
-  const fileName = req.params.fileName;
-  const filePath = path.join(__dirname, "output", roomName, fileName);
+const ffmpegProcessMap = {};
 
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error("File not found", err);
-      res.status(404).send("File not found");
-    }
-  });
+// Function to handle received chunk data for a specific room
+function handleChunk(roomName, chunkData) {
+  const filename = generateFilename(roomName);
+  // console.log(chunkData.length);
+
+  // Ensure streams directory exists
+  if (!fs.existsSync(streamsDir)) {
+    fs.mkdirSync(streamsDir, { recursive: true });
+  }
+
+  if (!ffmpegProcessMap[roomName]) {
+    const ffmpegCommand = [
+      "-i",
+      "-", // Read from standard input (stdin)
+      "-c:v",
+      "libx264",
+      "-c:a",
+      "aac",
+      "-strict",
+      "-2",
+      "-hls_time",
+      "5",
+      "-hls_list_size",
+      "3",
+      filename,
+    ];
+
+    const ffmpegProcess = spawn("ffmpeg", ffmpegCommand);
+    ffmpegProcess.stdout.on("data", (data) => {
+      console.log("ffmpeg stdout:", data.toString());
+    });
+    ffmpegProcess.stderr.on("data", (data) => {
+      console.log(data.toString());
+    });
+    ffmpegProcessMap[roomName] = ffmpegProcess;
+  }
+  ffmpegProcessMap[roomName].stdin.write(chunkData);
+}
+
+// Start the Express server
+const server = app.listen(9000, () => {
+  console.log("Server listening on port 9000");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+process.on("SIGTERM", () => {
+  server.close(() => {
+    console.log("Server closed");
+  });
 });
