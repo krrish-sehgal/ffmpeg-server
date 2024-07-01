@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HLS Stream Player</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="index.css" />
   </head>
   <body>
     <h1>HLS Stream Player</h1>
-    <video id="video" controls></video>
-    <input type="text" name="roomName" id="roomName" />
-    <button id="joinRoom">Join Room</button>
+    <div id="rooms"></div>
+    <div id="noStreams">No live streams</div>
+    <div id="videoContainer">
+      <video id="video" controls></video>
+    </div>
     <script src="index.js"></script>
   </body>
 </html>

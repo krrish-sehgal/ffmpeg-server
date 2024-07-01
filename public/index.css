@@ -1,0 +1,20 @@
+.room {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.thumbnail {
+  width: 100px;
+  height: auto;
+  cursor: pointer;
+}
+.room-name {
+  margin-left: 10px;
+  cursor: pointer;
+}
+#noStreams {
+  display: none;
+}
+#videoContainer {
+  display: none;
+}
