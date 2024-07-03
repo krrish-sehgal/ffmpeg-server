@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to fetch available rooms
   const fetchRooms = async () => {
     try {
-      const response = await fetch("http://localhost:9000/getRooms");
+      const response = await fetch("http://localhost:9000/rooms");
       const rooms = await response.json();
       return rooms;
     } catch (error) {

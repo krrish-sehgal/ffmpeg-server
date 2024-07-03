@@ -1,41 +1,14 @@
-const express = require("express");
 const path = require("path");
-const { spawn } = require("child_process");
+const streamsDir = path.join(__dirname, "..", "..", "output");
+const thumbnailsDir = path.join(__dirname, "..", "..", "thumbnails");
 const fs = require("fs");
-const { promisify } = require("util");
-
-const streamsDir = path.join(__dirname, "output");
-const thumbnailsDir = path.join(__dirname, "thumbnails");
-
-const app = express();
-
-// Ensure thumbnails directory exists
-if (!fs.existsSync(thumbnailsDir)) {
-  fs.mkdirSync(thumbnailsDir, { recursive: true });
-}
+const { spawn } = require("child_process");
 
 function generateFilename(roomName) {
   const streamPath = path.join(streamsDir, `${roomName}`);
   fs.mkdirSync(streamPath, { recursive: true });
   return path.join(streamPath, "index.m3u8");
 }
-
-app.use("/", express.static(path.join(__dirname, "public")));
-app.use("/output", express.static(path.join(__dirname, "output")));
-app.use("/thumbnails", express.static(path.join(__dirname, "thumbnails")));
-
-app.post("/chunk/:roomName", (req, res) => {
-  req.on("data", (chunk) => {
-    handleChunk(req.params.roomName, chunk);
-  });
-
-  req.on("end", () => {
-    console.log(`Stream stopped for ${req.params.roomName}`);
-    ffmpegProcessMap[req.params.roomName].stdin.end();
-  });
-
-  res.sendStatus(200);
-});
 
 const ffmpegProcessMap = {};
 
@@ -87,6 +60,11 @@ function handleChunk(roomName, chunkData) {
 async function generateThumbnail(roomName) {
   const input = path.join(streamsDir, roomName, "index.m3u8");
   const output = path.join(thumbnailsDir, `${roomName}.jpg`);
+
+  // Ensure thumbnails directory exists
+  if (!fs.existsSync(thumbnailsDir)) {
+    fs.mkdirSync(thumbnailsDir, { recursive: true });
+  }
 
   if (!fs.existsSync(input) || fs.statSync(input).size === 0) {
     console.log(`Input file for room ${roomName} does not exist or is empty.`);
@@ -140,51 +118,8 @@ async function generateThumbnail(roomName) {
   });
 }
 
-// Ensure thumbnails directory exists
-if (!fs.existsSync(thumbnailsDir)) {
-  fs.mkdirSync(thumbnailsDir, { recursive: true });
-}
-
-// Periodically generate thumbnails for active rooms
-setInterval(async () => {
-  for (const roomName in ffmpegProcessMap) {
-    try {
-      await generateThumbnail(roomName);
-    } catch (error) {
-      console.error(
-        `Error generating thumbnail for room ${roomName}: ${error.message}`
-      );
-    }
-  }
-}, 30000);
-
-// Endpoint to get active rooms and their thumbnails
-app.get("/getRooms", async (req, res) => {
-  const rooms = [];
-
-  for (const roomName in ffmpegProcessMap) {
-    try {
-      await generateThumbnail(roomName);
-      rooms.push({
-        name: roomName,
-        thumbnail: `/thumbnails/${roomName}.jpg`,
-      });
-    } catch (error) {
-      console.error(
-        `Error generating thumbnail for room ${roomName}: ${error.message}`
-      );
-    }
-  }
-
-  res.json(rooms);
-});
-// Start the Express server
-const server = app.listen(9000, () => {
-  console.log("Server listening on port 9000");
-});
-
-process.on("SIGTERM", () => {
-  server.close(() => {
-    console.log("Server closed");
-  });
-});
+module.exports = {
+  handleChunk,
+  generateThumbnail,
+  ffmpegProcessMap,
+};
