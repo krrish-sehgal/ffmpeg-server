@@ -1,6 +1,14 @@
 const express = require("express");
 const path = require("path");
 const { generateThumbnail, ffmpegProcessMap } = require("./utils/utils");
+const https = require("https");
+const fs = require("fs");
+
+const credentials = {
+  key: fs.readFileSync(path.join(__dirname, "../keys", "server.key"), "utf8"),
+  cert: fs.readFileSync(path.join(__dirname, "../keys", "server.crt"), "utf8"),
+  secureProtocol: "TLSv1_2_method",
+};
 
 const app = express();
 
@@ -37,12 +45,13 @@ setInterval(async () => {
 }, 30000);
 
 // Start the Express server
-const server = app.listen(9000, () => {
-  console.log("Server listening on port 9000");
+const httpsServer = https.createServer(credentials, app);
+httpsServer.listen(9000, () => {
+  console.log("App is running");
 });
 
 process.on("SIGTERM", () => {
-  server.close(() => {
+  httpsServer.close(() => {
     console.log("Server closed");
   });
 });
