@@ -91,19 +91,6 @@ async function generateThumbnail(roomName) {
       );
       reject(error);
     });
-
-    ffmpegProcess.stderr.on("data", (data) => {
-      const outputMessage = data.toString().toLowerCase();
-      if (outputMessage.includes("file already exists")) {
-        console.log(
-          `Thumbnail for room ${roomName} already exists, overwriting.`
-        );
-        resolve(); // Resolve even if file exists, since we're overwriting
-      } else {
-        console.error(`${data}`);
-      }
-    });
-
     ffmpegProcess.on("close", (code) => {
       if (code !== 0) {
         console.error(

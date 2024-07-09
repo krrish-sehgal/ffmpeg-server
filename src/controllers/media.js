@@ -9,6 +9,7 @@ exports.postMediaChunk = (req, res, next) => {
   req.on("end", () => {
     console.log(`Stream stopped for ${req.params.roomName}`);
     ffmpegProcessMap[req.params.roomName].stdin.end();
+    delete ffmpegProcessMap[req.params.roomName];
   });
 
   res.sendStatus(200);

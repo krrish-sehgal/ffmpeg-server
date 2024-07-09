@@ -5,12 +5,6 @@ const http = require("http");
 //const https = require("https");
 const fs = require("fs");
 
-/*const credentials = {
-  key: fs.readFileSync(path.join(__dirname, "../keys", "server.key"), "utf8"),
-  cert: fs.readFileSync(path.join(__dirname, "../keys", "server.crt"), "utf8"),
-  secureProtocol: "TLSv1_2_method",
-};*/
-
 const app = express();
 
 const mediaRoutes = require("./routes/media");
@@ -47,7 +41,7 @@ setInterval(async () => {
 
 // Start the Express server
 const httpServer = http.createServer(app);
-httpServer.listen(80, () => {
+httpServer.listen(9000, () => {
   console.log("App is running");
 });
 

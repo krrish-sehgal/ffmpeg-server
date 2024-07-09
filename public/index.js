@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to fetch available rooms
   const fetchRooms = async () => {
     try {
-      const response = await fetch("http://35.200.142.251:80/rooms");
+      const response = await fetch("http://localhost:9000/rooms");
       const rooms = await response.json();
       return rooms;
     } catch (error) {
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       roomDiv.className = "room";
 
       const thumbnail = document.createElement("img");
-      thumbnail.src = `http://35.200.142.251:80/thumbnails/${room.name}.jpg`; // Prevent caching
+      thumbnail.src = `http://localhost:9000/thumbnails/${room.name}.jpg`; // Prevent caching
       thumbnail.alt = `Thumbnail for ${room.name}`;
       thumbnail.className = "thumbnail";
 
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const onClick = () => {
         roomsDiv.style.display = "none"; // Hide the rooms list
-        const videoSrc = `http://35.200.142.251:80/output/${room.name}/index.m3u8`;
+        const videoSrc = `http://localhost:9000/output/${room.name}/index.m3u8`;
 
         if (Hls.isSupported()) {
           const hls = new Hls();
