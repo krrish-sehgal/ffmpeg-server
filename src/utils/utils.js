@@ -100,7 +100,7 @@ async function generateThumbnail(roomName) {
         );
         resolve(); // Resolve even if file exists, since we're overwriting
       } else {
-        console.error(`ffmpeg stderr for room ${roomName}: ${data}`);
+        console.error(`${data}`);
       }
     });
 
