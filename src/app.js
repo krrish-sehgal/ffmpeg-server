@@ -10,7 +10,7 @@ const app = express();
 const mediaRoutes = require("./routes/media");
 const userRoutes = require("./routes/user");
 
-app.use("/", express.static(path.join(__dirname, "..", "public")));
+// app.use("/", express.static(path.join(__dirname, "..", "public")));
 app.use("/output", express.static(path.join(__dirname, "..", "output")));
 app.use(
   "/thumbnails",
@@ -41,7 +41,7 @@ setInterval(async () => {
 
 // Start the Express server
 const httpServer = http.createServer(app);
-httpServer.listen(9000, () => {
+httpServer.listen(8080, () => {
   console.log("App is running");
 });
 
