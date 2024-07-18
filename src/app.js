@@ -2,7 +2,6 @@ const express = require("express");
 const path = require("path");
 const { generateThumbnail, ffmpegProcessMap } = require("./utils/utils");
 const http = require("http");
-//const https = require("https");
 const fs = require("fs");
 
 const app = express();
@@ -39,10 +38,13 @@ setInterval(async () => {
   }
 }, 30000);
 
+// Use the PORT environment variable or default to 8080
+const PORT = process.env.PORT || 8080;
+
 // Start the Express server
 const httpServer = http.createServer(app);
-httpServer.listen(8080, () => {
-  console.log("App is running");
+httpServer.listen(PORT, () => {
+  console.log(`App is running on port ${PORT}`);
 });
 
 process.on("SIGTERM", () => {
